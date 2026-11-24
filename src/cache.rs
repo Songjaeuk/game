@@ -195,7 +195,8 @@ impl Cache {
     }
 
     /// 배틀넷 번호 → 캐시 모드 후보 (최신 순)
-    /// .s2mh 맨 앞부분에 번호가 [0x09][varint(번호*2)] 로 적혀 있음 (예: 190748 → 09 b8 a4 17)
+    /// .s2mh 앞부분(해시 뒤쪽 포함)에 번호가 [0x09][varint(번호*2)] 로 적혀 있음 (예: 440471 → 09 ae e2 35)
+    /// 맨 앞 번호는 지역별 번호일 수 있어, 해시 뒤에 오는 의존 번호까지 보려고 앞 256바이트를 뒤짐
     fn by_id(&self, id: &str) -> Vec<usize> {
         let Ok(n) = id.parse::<u64>() else { return vec![] };
         let mut v = n << 1;
@@ -211,7 +212,7 @@ impl Cache {
         }
         let mut hits: Vec<usize> = Vec::new();
         for (_, d) in &self.mh {
-            let head = &d[..d.len().min(48)];
+            let head = &d[..d.len().min(256)];
             if find(head, &needle, 0).is_none() {
                 continue;
             }
